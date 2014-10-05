@@ -438,6 +438,8 @@
 	extern void		NRF24L01_set_rx_addr(uint8_t pipe, uint8_t* addr, uint8_t len);
 	extern void		NRF24L01_set_autoack_pipes(nrf24l01_shockburst_t* pipes);
 	extern void		NRF24L01_set_payload_width(uint8_t pipe, uint8_t width);
+	extern void		NRF24L01_flush_rx();
+	extern void		NRF24L01_flush_tx();
 	
 	#include "NRF24L01.c"
 #endif

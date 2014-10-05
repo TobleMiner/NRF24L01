@@ -7,6 +7,8 @@ extern void NRF24L01_init(void)
 {
 	NRF24L01_LOW_init_IO();
 	spi_init();
+	NRF24L01_flush_rx();
+	NRF24L01_flush_tx();
 	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
 	config->value = 0;
 	#if NRF24L01_PRESET_RX == TRUE
@@ -140,6 +142,20 @@ void NRF24L01_set_tx(void)
 	config->reserved = 0;
 	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config->value);
 	free(config);
+}
+
+extern void NRF24L01_flush_rx()
+{
+	NRF24L01_CSN_LOW;
+	spi_fast_shift(NRF24L01_CMD_FLUSH_RX);
+	NRF24L01_CSN_HIGH;
+}
+
+extern void NRF24L01_flush_tx()
+{
+	NRF24L01_CSN_LOW;
+	spi_fast_shift(NRF24L01_CMD_FLUSH_TX);
+	NRF24L01_CSN_HIGH;
 }
 
 //LOW functions
