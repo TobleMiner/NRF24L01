@@ -237,6 +237,7 @@
 	
 	//Bitmasks
 	//Config
+	#define NRF24L01_MASK_CONFIG				0b01111111
 	#define NRF24L01_MASK_CONFIG_MASK_RX_DR		0b01000000
 	#define NRF24L01_MASK_CONFIG_MASK_TX_DS		0b00100000
 	#define NRF24L01_MASK_CONFIG_MASK_MAX_RT	0b00010000
@@ -246,6 +247,7 @@
 	#define NRF24L01_MASK_CONFIG_PRIM_RX		0b00000001
 	
 	//Enhanced ShockBurst
+	#define NRF24L01_MASK_EN_AA					0b00111111
 	#define NRF24L01_MASK_EN_AA_ENAA_P5			0b00100000
 	#define NRF24L01_MASK_EN_AA_ENAA_P4			0b00010000
 	#define NRF24L01_MASK_EN_AA_ENAA_P3			0b00001000
@@ -254,6 +256,7 @@
 	#define NRF24L01_MASK_EN_AA_ENAA_P0			0b00000001
 	
 	//Enabled RX addresses
+	#define NRF24L01_MASK_EN_RXADDR				0b00111111
 	#define NRF24L01_MASK_EN_RXADDR_ERX_P5		0b00100000
 	#define NRF24L01_MASK_EN_RXADDR_ERX_P4		0b00010000
 	#define NRF24L01_MASK_EN_RXADDR_ERX_P3		0b00001000
@@ -262,22 +265,27 @@
 	#define NRF24L01_MASK_EN_RXADDR_ERX_P0		0b00000001
 	
 	//Setup of Address width (common for all pipes)
+	#define NRF24L01_MASK_SETUP_AW				0b00000011
 	#define NRF24L01_MASK_SETUP_AW_AW			0b00000011
 	
 	//Setup of automatic retransmission
+	#define NRF24L01_MASK_SETUP_RETR			0b11111111
 	#define NRF24L01_MASK_SETUP_RETR_ARD		0b11110000
 	#define NRF24L01_MASK_SETUP_RETR_ARC		0b00001111
 	
 	//RF channel
+	#define NRF24L01_MASK_RF_CH					0b01111111
 	#define NRF24L01_MASK_RF_CH_RF_CH			0b01111111
 	
 	//RF setup
+	#define NRF24L01_MASK_RF_SETUP				0b00011111
 	#define NRF24L01_MASK_RF_SETUP_PLL_LOCK		0b00010000
 	#define NRF24L01_MASK_RF_SETUP_RF_DR		0b00001000
 	#define NRF24L01_MASK_RF_SETUP_RF_PWR		0b00000110
 	#define NRF24L01_MASK_RF_SETUP_LNA_HCURR	0b00000001
 	
 	//Status
+	#define NRF24L01_MASK_STATUS				0b01111111
 	#define NRF24L01_MASK_STATUS_RX_DR			0b01000000
 	#define NRF24L01_MASK_STATUS_TX_DS			0b00100000
 	#define NRF24L01_MASK_STATUS_MAX_RT			0b00010000
@@ -285,49 +293,64 @@
 	#define NRF24L01_MASK_STATUS_TX_FULL		0b00000001
 	
 	//Transmit observe register
+	#define NRF24L01_MASK_OBSERVE_TX			0b11111111
 	#define NRF24L01_MASK_OBSERVE_TX_PLOS_CNT	0b11110000
 	#define NRF24L01_MASK_OBSERVE_TX_ARC_CNT	0b00001111
 	
 	//Carrier detect
+	#define NRF24L01_MASK_CD					0b00000001
 	#define NRF24L01_MASK_CD_CD					0b00000001
 	
 	//Receive address data pipe 0, 5 bytes LSB first
+	#define NRF24L01_MASK_RX_ADDR_P0			0b11111111
 	#define NRF24L01_MASK_RX_ADDR_P0_RX_ADDR_P0	0b11111111
 
 	//Receive address data pipe 1, 5 bytes LSB first
+	#define NRF24L01_MASK_RX_ADDR_P1			0b11111111
 	#define NRF24L01_MASK_RX_ADDR_P1_RX_ADDR_P1	0b11111111
 	
 	//Receive address data pipe 2
+	#define NRF24L01_MASK_RX_ADDR_P2			0b11111111
 	#define NRF24L01_MASK_RX_ADDR_P2_RX_ADDR_P2	0b11111111
 
 	//Receive address data pipe 3
+	#define NRF24L01_MASK_RX_ADDR_P3			0b11111111
 	#define NRF24L01_MASK_RX_ADDR_P3_RX_ADDR_P3	0b11111111
 
 	//Receive address data pipe 4
+	#define NRF24L01_MASK_RX_ADDR_P4			0b11111111
 	#define NRF24L01_MASK_RX_ADDR_P4_RX_ADDR_P4	0b11111111
 
 	//Receive address data pipe 5
+	#define NRF24L01_MASK_RX_ADDR_P5			0b11111111
 	#define NRF24L01_MASK_RX_ADDR_P5_RX_ADDR_P5	0b11111111
 
 	//Transmit address, 5 bytes LSB first
+	#define NRF24L01_MASK_TX_ADDR				0b11111111
 	#define NRF24L01_MASK_TX_ADDR_TX_ADDR		0b11111111
 	
 	//Number of bytes in RX payload in pipe 0
+	#define NRF24L01_MASK_RX_PW_P0				0b00111111
 	#define NRF24L01_MASK_RX_PW_P0_RX_PW_P0		0b00111111
 	
 	//Number of bytes in RX payload in pipe 1
+	#define NRF24L01_MASK_RX_PW_P1				0b00111111
 	#define NRF24L01_MASK_RX_PW_P1_RX_PW_P1		0b00111111
 	
 	//Number of bytes in RX payload in pipe 2
+	#define NRF24L01_MASK_RX_PW_P2				0b00111111
 	#define NRF24L01_MASK_RX_PW_P2_RX_PW_P2		0b00111111
 	
 	//Number of bytes in RX payload in pipe 3
+	#define NRF24L01_MASK_RX_PW_P3				0b00111111
 	#define NRF24L01_MASK_RX_PW_P3_RX_PW_P3		0b00111111
 	
 	//Number of bytes in RX payload in pipe 4
+	#define NRF24L01_MASK_RX_PW_P4				0b00111111
 	#define NRF24L01_MASK_RX_PW_P4_RX_PW_P4		0b00111111
 	
 	//Number of bytes in RX payload in pipe 5
+	#define NRF24L01_MASK_RX_PW_P5				0b00111111
 	#define NRF24L01_MASK_RX_PW_P5_RX_PW_P5		0b00111111
 	
 	//FIFO status register
@@ -372,20 +395,24 @@
 	#define NRF24L01_CSN_LOW	MODULE_CSN_PORT	&= ~(1<<MODULE_CSN_PIN)
 	
 	//Presets from wireless.h
-	#define NRF24L01_PRESET_TXPWR = 0b11;
 	#if WIRELESS_TX_PWR == -6
-		#define NRF24L01_PRESET_TXPWR = 0b10;
+		#define NRF24L01_PRESET_TXPWR 0b10
 	#endif
 	#if WIRELESS_TX_PWR == -12
-		#define NRF24L01_PRESET_TXPWR = 0b01;
+		#define NRF24L01_PRESET_TXPWR 0b01
 	#endif
 	#if WIRELESS_TX_PWR == -18
-		#define NRF24L01_PRESET_TXPWR = 0b00;
+		#define NRF24L01_PRESET_TXPWR 0b00
+	#endif
+	#if WIRELESS_TX_PWR == 0
+		#define NRF24L01_PRESET_TXPWR 0b11
 	#endif
 	
-	#define NRF24L01_PRESET_BAUDRATE = 0;
 	#if WIRELESS_BAUDRATE == 2000
-		NRF24L01_PRESET_BAUDRATE = 1;
+		#define NRF24L01_PRESET_BAUDRATE 1
+	#endif
+	#if WIRELESS_BAUDRATE == 1000
+		#define NRF24L01_PRESET_BAUDRATE 0
 	#endif
 	
 	#define NRF24L01_PRESET_RX WIRELESS_RX_ENABLED
@@ -404,4 +431,13 @@
 	extern void		NRF24L01_send_data(uint8_t* data, uint8_t len);
 	extern void		NRF24L01_get_received_data(uint8_t* data, uint8_t len);
 	extern uint8_t	NRF24L01_get_payload_len(uint8_t pipe);
+	extern void		NRF24L01_write_ack_payload(uint8_t pipe, uint8_t* data, uint8_t len);
+	extern void		NRF24L01_activate(void);
+	extern void		NRF24L01_set_enabled_pipes(nrf24l01_en_rxaddr_t* pipes);
+	extern void		NRF24L01_set_tx_addr(uint8_t* addr, uint8_t len);
+	extern void		NRF24L01_set_rx_addr(uint8_t pipe, uint8_t* addr, uint8_t len);
+	extern void		NRF24L01_set_autoack_pipes(nrf24l01_shockburst_t* pipes);
+	extern void		NRF24L01_set_payload_width(uint8_t pipe, uint8_t width);
+	
+	#include "NRF24L01.c"
 #endif

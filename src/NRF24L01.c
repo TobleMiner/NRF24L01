@@ -1,12 +1,12 @@
-#include "NRF24L01.h"
-
 #include <stdlib.h>
-#include <delay.h>
+#include <util/delay.h>
+#include "spi.c"
 
 //HIGH functions
 extern void NRF24L01_init(void)
 {
 	NRF24L01_LOW_init_IO();
+	spi_init();
 	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
 	config->value = 0;
 	#if NRF24L01_PRESET_RX == TRUE
@@ -76,7 +76,70 @@ extern uint8_t NRF24L01_get_status(void)
 
 extern uint8_t NRF24L01_get_payload_len(uint8_t pipe)
 {
-	return NRF24L01_LOW_get_register(NRF24L01_REG_RX_PW_P0 + pipe);
+	return NRF24L01_LOW_get_register(NRF24L01_REG_RX_PW_P0 | pipe);
+}
+
+void NRF24L01_write_ack_payload(uint8_t pipe, uint8_t* data, uint8_t len)
+{
+	NRF24L01_CSN_LOW;
+	spi_fast_shift(NRF24L01_CMD_W_ACK_PAYLOAD | pipe);
+	spi_transmit_sync(data, len);
+	NRF24L01_CSN_HIGH;
+}
+
+void NRF24L01_activate(void)
+{
+	NRF24L01_CSN_LOW;
+	spi_fast_shift(NRF24L01_CMD_ACTIVATE);
+	spi_fast_shift(0x73);
+	NRF24L01_CSN_HIGH;
+}
+
+void NRF24L01_set_enabled_pipes(nrf24l01_en_rxaddr_t* pipes)
+{
+	pipes->reserved = 0;
+	NRF24L01_LOW_set_register(NRF24L01_REG_EN_RXADDR, pipes->value);
+}
+
+void NRF24L01_set_tx_addr(uint8_t* addr, uint8_t len)
+{
+	NRF24L01_LOW_write_register(NRF24L01_REG_TX_ADDR, addr, len);
+}
+
+void NRF24L01_set_rx_addr(uint8_t pipe, uint8_t* addr, uint8_t len)
+{
+	NRF24L01_LOW_write_register(NRF24L01_REG_RX_ADDR_P0 + pipe, addr, len);
+}
+
+void NRF24L01_set_autoack_pipes(nrf24l01_shockburst_t* pipes)
+{
+	pipes->reserved = 0;
+	NRF24L01_LOW_set_register(NRF24L01_REG_EN_AA, pipes->value);
+}
+
+void NRF24L01_set_payload_width(uint8_t pipe, uint8_t width)
+{
+	NRF24L01_LOW_set_register(NRF24L01_REG_RX_PW_P0 + pipe, width & NRF24L01_MASK_RX_PW_P0);
+}
+
+void NRF24L01_set_rx(void)
+{
+	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
+	config->value = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
+	config->prim_rx = 1;
+	config->reserved = 0;
+	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config->value);
+	free(config);
+}
+
+void NRF24L01_set_tx(void)
+{
+	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
+	config->value = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
+	config->prim_rx = 0;
+	config->reserved = 0;
+	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config->value);
+	free(config);
 }
 
 //LOW functions
@@ -108,14 +171,6 @@ void NRF24L01_LOW_write_register(uint8_t regaddr, uint8_t* data, uint8_t len)
 	NRF24L01_CSN_LOW;
 	spi_fast_shift(NRF24L01_CMD_W_REGISTER | regaddr);
 	spi_transmit_sync(data, len);
-	NRF24L01_CSN_HIGH;
-}
-
-void NRF24L01_LOW_read_register(uint8_t regaddr, uint8_t* data, uint8_t len)
-{
-	NRF24L01_CSN_LOW;
-	spi_fast_shift(NRF24L01_CMD_R_REGISTER | regaddr);
-	spi_transfer_sync(data, data, len);
 	NRF24L01_CSN_HIGH;
 }
 
