@@ -430,6 +430,7 @@
 	extern uint8_t	NRF24L01_get_status(void);
 	extern void		NRF24L01_send_data(uint8_t* data, uint8_t len);
 	extern void		NRF24L01_get_received_data(uint8_t* data, uint8_t len);
+	extern uint8_t	NRF24L01_get_pipe_from_status(uint8_t status);
 	extern uint8_t	NRF24L01_get_payload_len(uint8_t pipe);
 	extern void		NRF24L01_write_ack_payload(uint8_t pipe, uint8_t* data, uint8_t len);
 	extern void		NRF24L01_activate(void);

@@ -76,9 +76,14 @@ extern uint8_t NRF24L01_get_status(void)
 	return NRF24L01_LOW_read_byte(NRF24L01_CMD_NOP);
 }
 
+uint8_t	NRF24L01_get_pipe_from_status(uint8_t status)
+{
+	return (status & NRF24L01_MASK_STATUS_RX_P_NO) << 1;
+}
+
 extern uint8_t NRF24L01_get_payload_len(uint8_t pipe)
 {
-	return NRF24L01_LOW_get_register(NRF24L01_REG_RX_PW_P0 | pipe);
+	return NRF24L01_LOW_get_register(NRF24L01_REG_RX_PW_P0 + pipe) & NRF24L01_MASK_RX_PW_P0;
 }
 
 void NRF24L01_write_ack_payload(uint8_t pipe, uint8_t* data, uint8_t len)
