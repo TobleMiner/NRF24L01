@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2014 Tobias Schramm
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include <stdlib.h>
 #include <util/delay.h>
 #include "spi.c"
@@ -9,6 +31,7 @@ extern void NRF24L01_init(void)
 	spi_init();
 	NRF24L01_flush_rx();
 	NRF24L01_flush_tx();
+	NRF24L01_LOW_set_register(NRF24L01_REG_STATUS, NRF24L01_MASK_STATUS_MAX_RT | NRF24L01_MASK_STATUS_RX_DR | NRF24L01_MASK_STATUS_TX_DS);
 	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
 	config->value = 0;
 	#if NRF24L01_PRESET_RX == TRUE
@@ -38,6 +61,11 @@ extern void NRF24L01_init(void)
 	rf_setup->rf_dr = NRF24L01_PRESET_BAUDRATE;
 	NRF24L01_LOW_set_register(NRF24L01_REG_RF_SETUP, rf_setup->value);
 	free(rf_setup);
+	nrf24l01_rx_pw_t* payload_width = malloc(sizeof(nrf24l01_rx_pw_t));
+	payload_width->rx_pw = WIRELESS_PACK_LEN;
+	NRF24L01_LOW_set_register(NRF24L01_REG_RX_PW_P0, payload_width->value);
+	NRF24L01_LOW_set_register(NRF24L01_REG_RX_PW_P1, payload_width->value);
+	free(payload_width);	
 	NRF24L01_CE_HIGH;
 }
 
@@ -134,9 +162,11 @@ void NRF24L01_set_rx(void)
 	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
 	config->value = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
 	config->prim_rx = 1;
+	config->pwr_up = 1;
 	config->reserved = 0;
 	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config->value);
 	free(config);
+	NRF24L01_CE_HIGH;
 }
 
 void NRF24L01_set_tx(void)
@@ -144,6 +174,7 @@ void NRF24L01_set_tx(void)
 	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
 	config->value = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
 	config->prim_rx = 0;
+	config->pwr_up = 1;
 	config->reserved = 0;
 	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config->value);
 	free(config);
