@@ -20,10 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <stdlib.h>
-#include <util/delay.h>
-#include "spi.c"
-
 //HIGH functions
 extern void NRF24L01_init(void)
 {
@@ -48,6 +44,7 @@ extern void NRF24L01_init(void)
 	#if WIRELESS_EN_RX_IRQ != TRUE
 		config->mask_rx_dr = 1;
 	#endif
+	config->en_crc = 1;
 	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config->value);
 	free(config);
 	nrf24l01_rf_ch_t* rf_ch = malloc(sizeof(nrf24l01_rf_ch_t));
@@ -73,12 +70,7 @@ extern void NRF24L01_init(void)
 extern void NRF24L01_send_data(uint8_t* data, uint8_t len)
 {
 	NRF24L01_CE_LOW;
-	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
-	config->value = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
-	config->prim_rx = 0;
-	config->pwr_up = 1;
-	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config->value);
-	free(config);
+	NRF24L01_set_tx();
 	NRF24L01_CSN_LOW;
 	spi_fast_shift(NRF24L01_CMD_FLUSH_TX);
 	NRF24L01_CSN_HIGH;
@@ -93,34 +85,65 @@ extern void NRF24L01_send_data(uint8_t* data, uint8_t len)
 
 extern void NRF24L01_set_channel(uint8_t channel)
 {
-	nrf24l01_rf_ch_t* rf_ch = malloc(sizeof(nrf24l01_rf_ch_t));
-	rf_ch->value = 0;
-	rf_ch->rf_ch = channel;
-	NRF24L01_LOW_set_register(NRF24L01_REG_RF_CH, rf_ch->value);
-	free(rf_ch);
+	uint8_t rf_ch = channel;
+	rf_ch &= NRF24L01_MASK_RF_CH_RF_CH;
+	NRF24L01_LOW_set_register(NRF24L01_REG_RF_CH, rf_ch);
 }
 
 extern void NRF24L01_set_tx_pwr(uint8_t tx_pwr)
 {
-	nrf24l01_rf_setup_t* rf_setup = malloc(sizeof(nrf24l01_rf_setup_t));
-	rf_setup->value = NRF24L01_LOW_get_register(NRF24L01_REG_RF_SETUP);
-	rf_setup->rf_pwr = tx_pwr;
-	NRF24L01_LOW_set_register(NRF24L01_REG_RF_SETUP, rf_setup->value);
-	free(rf_setup);
+	uint8_t rf_setup = NRF24L01_LOW_get_register(NRF24L01_REG_RF_SETUP);
+	rf_setup &= ~NRF24L01_MASK_RF_SETUP_RF_PWR;
+	rf_setup |= (tx_pwr << 1) & NRF24L01_MASK_RF_SETUP_RF_PWR;
+	rf_setup &= NRF24L01_MASK_RF_SETUP;
+	NRF24L01_LOW_set_register(NRF24L01_REG_RF_SETUP, rf_setup);
+}
+
+extern void NRF24L01_enable_dyn_pld(uint8_t enable)
+{
+	uint8_t features = NRF24L01_LOW_get_register(NRF24L01_REG_FEATURE);
+	features &= ~NRF24L01_MASK_FEATURE_EN_DPL;
+	features |= NRF24L01_MASK_FEATURE_EN_DPL & ((enable ? TRUE : FALSE) << 2);
+	NRF24L01_LOW_set_register(NRF24L01_REG_FEATURE, features);
+}
+
+extern void NRF24L01_enable_dyn_pld_pipe(uint8_t pipe, uint8_t state)
+{
+	uint8_t dynpld_pipes = NRF24L01_LOW_get_register(NRF24L01_REG_DYNPD);
+	if(state)
+	dynpld_pipes |= (1 << pipe);
+	else
+	dynpld_pipes &= ~(1 << pipe);
+	NRF24L01_LOW_set_register(NRF24L01_REG_DYNPD, dynpld_pipes);
+}
+
+extern void NRF24L01_enable_ack_pld(uint8_t enable)
+{
+	uint8_t features = NRF24L01_LOW_get_register(NRF24L01_REG_FEATURE);
+	features &= ~NRF24L01_MASK_FEATURE_EN_ACK_PAY;
+	features |= NRF24L01_MASK_FEATURE_EN_ACK_PAY & ((enable ? TRUE : FALSE) << 1);
+	NRF24L01_LOW_set_register(NRF24L01_REG_FEATURE, features);
+}
+
+extern void NRF24L01_enable_dyn_ack(uint8_t enable)
+{
+	uint8_t features = NRF24L01_LOW_get_register(NRF24L01_REG_FEATURE);
+	features &= ~NRF24L01_MASK_FEATURE_EN_DYN_ACK;
+	features |= NRF24L01_MASK_FEATURE_EN_DYN_ACK & (enable ? TRUE : FALSE);
+	NRF24L01_LOW_set_register(NRF24L01_REG_FEATURE, features);
 }
 
 extern void NRF24L01_set_rf_dr(uint8_t data_rate)
 {
-	nrf24l01_rf_setup_t* rf_setup = malloc(sizeof(nrf24l01_rf_setup_t));
-	rf_setup->value = NRF24L01_LOW_get_register(NRF24L01_REG_RF_SETUP);
+	uint8_t rf_setup = NRF24L01_LOW_get_register(NRF24L01_REG_RF_SETUP);
 	switch(data_rate)
 	{
-		case 0: rf_setup->rf_dr_high = 0; rf_setup->rf_dr_low = 1; break; //250 kbps
-		case 1: rf_setup->rf_dr_high = 0; rf_setup->rf_dr_low = 0; break; //1 Mbps
-		case 2: rf_setup->rf_dr_high = 1; rf_setup->rf_dr_low = 0; break; //2 Mbps
+		case 0: rf_setup &=	~NRF24L01_MASK_RF_SETUP_RF_DR_HIGH; rf_setup |=	NRF24L01_MASK_RF_SETUP_RF_DR_LOW; break; //250 kbps
+		case 1: rf_setup &=	~NRF24L01_MASK_RF_SETUP_RF_DR_HIGH; rf_setup &=	~NRF24L01_MASK_RF_SETUP_RF_DR_LOW; break; //1 Mbps
+		case 2: rf_setup |=	NRF24L01_MASK_RF_SETUP_RF_DR_HIGH; rf_setup &= ~NRF24L01_MASK_RF_SETUP_RF_DR_LOW; break; //2 Mbps
 	}
-	NRF24L01_LOW_set_register(NRF24L01_REG_RF_SETUP, rf_setup->value);
-	free(rf_setup);
+	rf_setup &= NRF24L01_MASK_RF_SETUP;
+	NRF24L01_LOW_set_register(NRF24L01_REG_RF_SETUP, rf_setup);
 }
 
 extern void NRF24L01_get_received_data(uint8_t* data, uint8_t len)
@@ -142,9 +165,11 @@ uint8_t	NRF24L01_get_pipe_from_status(uint8_t status)
 	return (status & NRF24L01_MASK_STATUS_RX_P_NO) << 1;
 }
 
-extern uint8_t NRF24L01_get_payload_len(uint8_t pipe)
+extern uint8_t NRF24L01_get_payload_len()
 {
-	return NRF24L01_LOW_get_register(NRF24L01_REG_RX_PW_P0 + pipe) & NRF24L01_MASK_RX_PW_P0;
+	NRF24L01_CSN_LOW;
+	return spi_fast_shift(NRF24L01_CMD_R_RX_PL_WID);
+	NRF24L01_CSN_HIGH;
 }
 
 void NRF24L01_write_ack_payload(uint8_t pipe, uint8_t* data, uint8_t len)
@@ -192,25 +217,21 @@ void NRF24L01_set_payload_width(uint8_t pipe, uint8_t width)
 
 void NRF24L01_set_rx(void)
 {
-	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
-	config->value = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
-	config->prim_rx = 1;
-	config->pwr_up = 1;
-	config->reserved = 0;
-	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config->value);
-	free(config);
+	uint8_t config = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
+	config |= NRF24L01_MASK_CONFIG_PRIM_RX;
+	config |= NRF24L01_MASK_CONFIG_PWR_UP;
+	config &= NRF24L01_MASK_CONFIG;
+	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config);
 	NRF24L01_CE_HIGH;
 }
 
 void NRF24L01_set_tx(void)
 {
-	nrf24l01_config_t* config = malloc(sizeof(nrf24l01_config_t));
-	config->value = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
-	config->prim_rx = 0;
-	config->pwr_up = 1;
-	config->reserved = 0;
-	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config->value);
-	free(config);
+	uint8_t config = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
+	config &= ~NRF24L01_MASK_CONFIG_PRIM_RX;
+	config |= NRF24L01_MASK_CONFIG_PWR_UP;
+	config &= NRF24L01_MASK_CONFIG;
+	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config);
 }
 
 extern void NRF24L01_flush_rx()
