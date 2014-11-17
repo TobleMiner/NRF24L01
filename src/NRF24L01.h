@@ -479,13 +479,12 @@ THE SOFTWARE.
 	extern uint8_t	NRF24L01_get_payload_len();
 	extern void		NRF24L01_write_ack_payload(uint8_t pipe, uint8_t* data, uint8_t len);
 	extern void		NRF24L01_activate(void);
-	extern void		NRF24L01_set_enabled_pipes(nrf24l01_en_rxaddr_t* pipes);
+	extern void		NRF24L01_enable_pipe(uint8_t pipe, uint8_t state);
 	extern void		NRF24L01_set_tx(void);
 	extern void		NRF24L01_set_rx(void);
 	extern void		NRF24L01_set_tx_addr(uint8_t* addr, uint8_t len);
-	extern void		NRF24L01_set_tx_addr(uint8_t* addr, uint8_t len);
 	extern void		NRF24L01_set_rx_addr(uint8_t pipe, uint8_t* addr, uint8_t len);
-	extern void		NRF24L01_set_autoack_pipes(nrf24l01_shockburst_t* pipes);
+	extern void		NRF24L01_set_autoack_pipe(uint8_t pipe, uint8_t state);
 	extern void		NRF24L01_set_payload_width(uint8_t pipe, uint8_t width);
 	extern void		NRF24L01_flush_rx();
 	extern void		NRF24L01_flush_tx();
@@ -493,6 +492,9 @@ THE SOFTWARE.
 	extern void		NRF24L01_enable_dyn_pld(uint8_t enable);
 	extern void		NRF24L01_enable_ack_pld(uint8_t enable);
 	extern void		NRF24L01_enable_dyn_ack(uint8_t enable);
+	extern void		NRF24L01_enable_dyn_pld_pipe(uint8_t pipe, uint8_t state);
+	extern void		NRF24L01_power_up(void);
+	extern void		NRF24L01_power_down(void);
 
 #include "NRF24L01.c"
 #endif
