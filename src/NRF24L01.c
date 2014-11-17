@@ -20,7 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-//HIGH functions
+/************************************************************************/
+/* HIGH functions                                                       */
+/************************************************************************/
+
+///Basic NRF24L01 initialization. Enables pipe 0 and pipe 1. Applies configuration from config/wireless.h
 extern void NRF24L01_init(void)
 {
 	NRF24L01_LOW_init_IO();
@@ -67,6 +71,7 @@ extern void NRF24L01_init(void)
 	NRF24L01_CE_HIGH;
 }
 
+///Initializes data transmission. Automatically sets the NRF24L01 to TX mode
 extern void NRF24L01_send_data(uint8_t* data, uint8_t len)
 {
 	NRF24L01_CE_LOW;
@@ -83,6 +88,24 @@ extern void NRF24L01_send_data(uint8_t* data, uint8_t len)
 	NRF24L01_CE_LOW;
 }
 
+///Wakes the NRF24L01 from standby mode.
+extern void NRF24L01_power_up(void)
+{
+	uint8_t config = NRF24L01_LOW_get_register(NRF24L01_REG_STATUS);
+	config |= NRF24L01_MASK_CONFIG_PWR_UP;
+	NRF24L01_LOW_set_register(NRF24L01_REG_STATUS, config);
+}
+
+///Puts the NRF24L01 into standby mode.
+extern void NRF24L01_power_down(void)
+{
+	uint8_t config = NRF24L01_LOW_get_register(NRF24L01_REG_STATUS);
+	config &= ~NRF24L01_MASK_CONFIG_PWR_UP;
+	NRF24L01_LOW_set_register(NRF24L01_REG_STATUS, config);
+}
+
+///Sets the frequency channel the NRF24L01 operates on.
+///Must be inside range [0 .. 125]
 extern void NRF24L01_set_channel(uint8_t channel)
 {
 	uint8_t rf_ch = channel;
@@ -90,6 +113,12 @@ extern void NRF24L01_set_channel(uint8_t channel)
 	NRF24L01_LOW_set_register(NRF24L01_REG_RF_CH, rf_ch);
 }
 
+///Sets the tx power of the NRF24L01
+///Must be inside range [0 .. 3]
+///0 = -18 dBm -> 0.016 mW
+///1 = -12 dBm -> 0.063 mW
+///2 = - 6 dBm -> 0.251 mW
+///3 =   0 dBm -> 1.000 mW
 extern void NRF24L01_set_tx_pwr(uint8_t tx_pwr)
 {
 	uint8_t rf_setup = NRF24L01_LOW_get_register(NRF24L01_REG_RF_SETUP);
@@ -99,6 +128,7 @@ extern void NRF24L01_set_tx_pwr(uint8_t tx_pwr)
 	NRF24L01_LOW_set_register(NRF24L01_REG_RF_SETUP, rf_setup);
 }
 
+///Enables the dynamic payload feature.
 extern void NRF24L01_enable_dyn_pld(uint8_t enable)
 {
 	uint8_t features = NRF24L01_LOW_get_register(NRF24L01_REG_FEATURE);
@@ -107,6 +137,8 @@ extern void NRF24L01_enable_dyn_pld(uint8_t enable)
 	NRF24L01_LOW_set_register(NRF24L01_REG_FEATURE, features);
 }
 
+///Enables the dynamic payload feature for the given pipe.
+///Overrides the payload width setting for the pipe.
 extern void NRF24L01_enable_dyn_pld_pipe(uint8_t pipe, uint8_t state)
 {
 	uint8_t dynpld_pipes = NRF24L01_LOW_get_register(NRF24L01_REG_DYNPD);
@@ -117,6 +149,8 @@ extern void NRF24L01_enable_dyn_pld_pipe(uint8_t pipe, uint8_t state)
 	NRF24L01_LOW_set_register(NRF24L01_REG_DYNPD, dynpld_pipes);
 }
 
+///Enables the acknowledge payload feature. Should only be used with dynamic
+///payload size. Otherwise ack payloads my be discarded by the receiver
 extern void NRF24L01_enable_ack_pld(uint8_t enable)
 {
 	uint8_t features = NRF24L01_LOW_get_register(NRF24L01_REG_FEATURE);
@@ -125,6 +159,9 @@ extern void NRF24L01_enable_ack_pld(uint8_t enable)
 	NRF24L01_LOW_set_register(NRF24L01_REG_FEATURE, features);
 }
 
+///Enables the dynamic acknowledge feature. This feature allows single packets to
+///contain a 'do not acknowledge' flag. The receiver will then not send an automatic 
+///acknowledgment for this packet.
 extern void NRF24L01_enable_dyn_ack(uint8_t enable)
 {
 	uint8_t features = NRF24L01_LOW_get_register(NRF24L01_REG_FEATURE);
@@ -133,6 +170,22 @@ extern void NRF24L01_enable_dyn_ack(uint8_t enable)
 	NRF24L01_LOW_set_register(NRF24L01_REG_FEATURE, features);
 }
 
+///Enables / Disables auctomatic packet acknowledgement for the givent pipe.
+///By default all pipes have this feature turned on.
+extern void	NRF24L01_set_autoack_pipe(uint8_t pipe, uint8_t state)
+{
+	uint8_t auto_ack_pipes = NRF24L01_LOW_get_register(NRF24L01_REG_EN_AA);
+	auto_ack_pipes &= ~(1<<pipe);
+	auto_ack_pipes |= (1<<pipe);
+	NRF24L01_LOW_set_register(NRF24L01_REG_EN_AA, auto_ack_pipes);
+}
+
+///Sets the data rate used on the RF side
+///Must be inside range [0 .. 2]
+///0 = 0.25 Mbps
+///1 = 1.00 Mbps
+///2 = 2.00 Mbps
+///0.25 Mbps mode works only with NRF24L01+
 extern void NRF24L01_set_rf_dr(uint8_t data_rate)
 {
 	uint8_t rf_setup = NRF24L01_LOW_get_register(NRF24L01_REG_RF_SETUP);
@@ -146,6 +199,7 @@ extern void NRF24L01_set_rf_dr(uint8_t data_rate)
 	NRF24L01_LOW_set_register(NRF24L01_REG_RF_SETUP, rf_setup);
 }
 
+///Reads data received by the NRF24L01
 extern void NRF24L01_get_received_data(uint8_t* data, uint8_t len)
 {
 	NRF24L01_CSN_LOW;
@@ -155,11 +209,13 @@ extern void NRF24L01_get_received_data(uint8_t* data, uint8_t len)
 	NRF24L01_LOW_set_register(NRF24L01_REG_STATUS, NRF24L01_MASK_STATUS_RX_DR);
 }
 
+///Reads the NRF24L01's actual status
 extern uint8_t NRF24L01_get_status(void)
 {
 	return NRF24L01_LOW_read_byte(NRF24L01_CMD_NOP);
 }
 
+///Reads the pipe data was received on from the NRF24L01's status
 uint8_t	NRF24L01_get_pipe_from_status(uint8_t status)
 {
 	return (status & NRF24L01_MASK_STATUS_RX_P_NO) << 1;
@@ -172,6 +228,9 @@ extern uint8_t NRF24L01_get_payload_len()
 	NRF24L01_CSN_HIGH;
 }
 
+///Writes the additional payload to be transmitted together with the auto 
+///acknowledgment data on the given pipe. Works only when dynamic payload 
+///and acknowledgment payload feature are turned on
 void NRF24L01_write_ack_payload(uint8_t pipe, uint8_t* data, uint8_t len)
 {
 	NRF24L01_CSN_LOW;
@@ -180,6 +239,10 @@ void NRF24L01_write_ack_payload(uint8_t pipe, uint8_t* data, uint8_t len)
 	NRF24L01_CSN_HIGH;
 }
 
+
+///NRF24L01 ONLY
+///Calling this function toggles the availability of the acknowledgment payload, dynamic 
+///payload and dynamic acknowledgment bits int he feature register. Disabled by default.
 void NRF24L01_activate(void)
 {
 	NRF24L01_CSN_LOW;
@@ -188,33 +251,36 @@ void NRF24L01_activate(void)
 	NRF24L01_CSN_HIGH;
 }
 
-void NRF24L01_set_enabled_pipes(nrf24l01_en_rxaddr_t* pipes)
+///Enables / Disables single data pipes. By default pipe 0 and pipe 1 are enabled
+void NRF24L01_enable_pipe(uint8_t pipe, uint8_t state)
 {
-	pipes->reserved = 0;
-	NRF24L01_LOW_set_register(NRF24L01_REG_EN_RXADDR, pipes->value);
+	uint8_t pipes = NRF24L01_LOW_get_register(NRF24L01_REG_EN_RXADDR);
+	if(state)
+		pipes |= (1<<pipe);
+	else
+		pipes &= ~(1<<pipe);
+	NRF24L01_LOW_set_register(NRF24L01_REG_EN_RXADDR, pipes);
 }
 
+///Sets the tx address of the NRF24L01
 void NRF24L01_set_tx_addr(uint8_t* addr, uint8_t len)
 {
 	NRF24L01_LOW_write_register(NRF24L01_REG_TX_ADDR, addr, len);
 }
 
+///Sets the rx address for the specified pipe
 void NRF24L01_set_rx_addr(uint8_t pipe, uint8_t* addr, uint8_t len)
 {
 	NRF24L01_LOW_write_register(NRF24L01_REG_RX_ADDR_P0 + pipe, addr, len);
 }
 
-void NRF24L01_set_autoack_pipes(nrf24l01_shockburst_t* pipes)
-{
-	pipes->reserved = 0;
-	NRF24L01_LOW_set_register(NRF24L01_REG_EN_AA, pipes->value);
-}
-
+///Sets the payload length for the specified pipe
 void NRF24L01_set_payload_width(uint8_t pipe, uint8_t width)
 {
 	NRF24L01_LOW_set_register(NRF24L01_REG_RX_PW_P0 + pipe, width & NRF24L01_MASK_RX_PW_P0);
 }
 
+///Puts the NRF24L01 into receive mode
 void NRF24L01_set_rx(void)
 {
 	uint8_t config = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
@@ -225,6 +291,7 @@ void NRF24L01_set_rx(void)
 	NRF24L01_CE_HIGH;
 }
 
+///Puts the NRF24L01 into transmit mode
 void NRF24L01_set_tx(void)
 {
 	uint8_t config = NRF24L01_LOW_get_register(NRF24L01_REG_CONFIG);
@@ -234,6 +301,7 @@ void NRF24L01_set_tx(void)
 	NRF24L01_LOW_set_register(NRF24L01_REG_CONFIG, config);
 }
 
+///Flushes the NRF's receive packet buffer
 extern void NRF24L01_flush_rx()
 {
 	NRF24L01_CSN_LOW;
@@ -241,6 +309,7 @@ extern void NRF24L01_flush_rx()
 	NRF24L01_CSN_HIGH;
 }
 
+///Flushes the NRF's transmit packet buffer
 extern void NRF24L01_flush_tx()
 {
 	NRF24L01_CSN_LOW;
@@ -248,7 +317,11 @@ extern void NRF24L01_flush_tx()
 	NRF24L01_CSN_HIGH;
 }
 
-//LOW functions
+/************************************************************************/
+/* LOW functions                                                        */
+/************************************************************************/
+
+///Initializes the CS and CSN outputs
 void NRF24L01_LOW_init_IO(void)
 {
 	MODULE_CE_DDR	|= (1<<MODULE_CE_PIN);
@@ -257,6 +330,7 @@ void NRF24L01_LOW_init_IO(void)
 	NRF24L01_CSN_HIGH;
 }
 
+///Sets one byte in the NRF24L01's config registers
 void NRF24L01_LOW_set_register(uint8_t regaddr, uint8_t val)
 {
 	NRF24L01_CSN_LOW;
@@ -265,6 +339,7 @@ void NRF24L01_LOW_set_register(uint8_t regaddr, uint8_t val)
 	NRF24L01_CSN_HIGH;
 }
 
+///Gets one byte from the NRF24L01's config registers
 uint8_t NRF24L01_LOW_get_register(uint8_t regaddr)
 {
 	uint8_t byte;
@@ -272,6 +347,7 @@ uint8_t NRF24L01_LOW_get_register(uint8_t regaddr)
 	return byte;
 }
 
+///Sets multi byte registers in the NRF24L01
 void NRF24L01_LOW_write_register(uint8_t regaddr, uint8_t* data, uint8_t len)
 {
 	NRF24L01_CSN_LOW;
@@ -280,6 +356,7 @@ void NRF24L01_LOW_write_register(uint8_t regaddr, uint8_t* data, uint8_t len)
 	NRF24L01_CSN_HIGH;
 }
 
+///Reads multi byte registers from the NRF24L01
 void NRF24L01_LOW_read_register(uint8_t regaddr, uint8_t* data, uint8_t len)
 {
 	NRF24L01_CSN_LOW;
@@ -288,6 +365,7 @@ void NRF24L01_LOW_read_register(uint8_t regaddr, uint8_t* data, uint8_t len)
 	NRF24L01_CSN_HIGH;
 }
 
+///Sends a single one byte command to the NRF24L01 and gets the single byte response
 uint8_t NRF24L01_LOW_read_byte(uint8_t cmd)
 {
 	NRF24L01_CSN_LOW;
