@@ -199,6 +199,16 @@ extern void NRF24L01_set_rf_dr(uint8_t data_rate)
 	NRF24L01_LOW_set_register(NRF24L01_REG_RF_SETUP, rf_setup);
 }
 
+///Reads fifo status and returns if rx fifo is not empty
+extern uint8_t NRF24L01_data_ready(void)
+{
+	uint8_t fifo_status = NRF24L01_LOW_get_register(NRF24L01_REG_FIFO_STATUS);
+	if((fifo_status & NRF24L01_MASK_FIFO_STATUS_RX_EMPTY) == 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
 ///Reads data received by the NRF24L01
 extern void NRF24L01_get_received_data(uint8_t* data, uint8_t len)
 {

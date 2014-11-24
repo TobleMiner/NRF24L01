@@ -497,6 +497,7 @@ THE SOFTWARE.
 	extern void		NRF24L01_enable_dyn_pld_pipe(uint8_t pipe, uint8_t state);
 	extern void		NRF24L01_power_up(void);
 	extern void		NRF24L01_power_down(void);
+	extern uint8_t	NRF24L01_data_ready(void);
 
 #include "NRF24L01.c"
 #endif
