@@ -41,7 +41,3 @@ THE SOFTWARE.
 #if WIRELESS_TX_PWR < -18 || WIRELESS_TX_PWR > 0 || WIRELESS_TX_PWR % 6 != 0
 	#error "Invalid wireless TX power. Must be either -18 [dBm], -12 [dBm], -6 [dBm] or 0 [dBm]"
 #endif
-
-#if WIRELESS_TX_ENABLED == TRUE && WIRELESS_RX_ENABLED == TRUE
-	#pragma message "Keep in mind that you will have to switch between transmit and receive mode manually."
-#endif
